@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>文化视频自动摘要系统</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 40px;
+        }
+        h1 {
+            color: #333;
+        }
+        .section {
+            margin-bottom: 30px;
+        }
+        video {
+            width: 640px;
+            margin-top: 10px;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            margin-top: 10px;
+        }
+        #status {
+            margin-top: 10px;
+            color: #d00;
+        }
+    </style>
+</head>
+<body>
+    <h1>文化类视频自动摘要系统1</h1>
+
+    <div class="section">
+        <h2>上传视频文件</h2>
+        <form id="uploadForm">
+            <input type="file" id="videoInput" name="video" accept="video/*" required><br>
+            <button type="submit">上传并生成摘要</button>
+        </form>
+        <div id="status"></div>
+    </div>
+
+    <div class="section" id="resultSection" style="display: none;">
+        <h2>摘要视频预览</h2>
+        <video id="summaryVideo" controls></video>
+    </div>
+
+    <script>
+        document.getElementById("uploadForm").addEventListener("submit", function(e) {
+            e.preventDefault();
+            const formData = new FormData();
+            const fileInput = document.getElementById("videoInput");
+            const file = fileInput.files[0];
+
+            if (!file) {
+                alert("请选择一个视频文件！");
+                return;
+            }
+
+            formData.append("video", file);
+
+            const statusText = document.getElementById("status");
+            const resultSection = document.getElementById("resultSection");
+            const summaryVideo = document.getElementById("summaryVideo");
+
+            statusText.textContent = "处理中，请稍候...";
+
+            fetch("/api/video_summary", {
+                method: "POST",
+                body: formData
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error("服务器返回错误状态");
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.summary_video_path) {
+                    summaryVideo.src = data.summary_video_path;
+                    resultSection.style.display = "block";
+                    statusText.textContent = "摘要生成成功 ✅";
+                } else {
+                    throw new Error("返回数据格式不完整");
+                }
+            })
+            .catch(error => {
+                console.error("发生错误：", error);
+                statusText.textContent = "❌ 摘要生成失败，请检查后端日志或视频格式";
+            });
+        });
+    </script>
+</body>
+</html>

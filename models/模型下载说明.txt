@@ -1,0 +1,1 @@
+自行下载模型 bart-base-chinese 模型
